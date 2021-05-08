@@ -1,3 +1,7 @@
+# Материалы для КММО-1-20
+
+## OpenBSD
+
 Для подгтовки рабочей среды и первоначальной сборки необходимой инфраструктуры
 достаточно ввести команду:
 
@@ -23,7 +27,7 @@
 * `make all` (по умолчанию) — то же, что и `make base kernel`.
 * `make install` — устанавливает ядро и модифицированные узлы базовой ОС.
 
-# Дополнительные цели, полезные в работе:
+### Дополнительные цели, полезные в работе:
 
 * `make build` — собирает базовую систему и ядро, безотносительно наложения патчей.
 * `make clean` — удаляет промежуточные и конечные результаты сборки.
@@ -34,3 +38,21 @@
 
 При необходимости цели вызывают друг друга. Например, если `sys.tar.gz` ещё не был
 скачан, то `unpack-kernel` вызовет сначала `fetch-kernel`.
+
+## Linux
+
+Подробное описание процесса создания файловой системы уровня ядра в Linux,
+на английском языке:
+https://linux-kernel-labs.github.io/refs/heads/master/labs/filesystems_part1.html
+
+Потребуются исходные тексты ядра; желательно использовать поставляемый
+с вашим дистрибутивом Linux пакет исходных текстов, обычно это что-то вроде
+`linux-sources` или `kernel-source`. Инструкции по сборке ядра в различных
+дистрибутивах Linux приведены ниже:
+
+* [https://wiki.gentoo.org/wiki/Kernel/Configuration/ru](ALT)
+* [https://wiki.archlinux.org/title/Kernel_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)/Arch_Build_System_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)](Arch)
+* [https://wiki.centos.org/HowTos/Custom_Kernel](CentOS) (на английском)
+* [https://wiki.debian.org/BuildADebianKernelPackage](Debian) (на английском)
+* [https://wiki.gentoo.org/wiki/Kernel/Configuration/ru](Gentoo)
+* [https://wiki.ubuntu.com/Kernel/BuildYourOwnKernel](Ubuntu) (на английском)
