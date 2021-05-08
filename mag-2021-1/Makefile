@@ -17,6 +17,16 @@ FETCH_URI ?=		https://cdn.openbsd.org/pub/OpenBSD/6.8/
 # for OS build system
 MAKE_CMD =	env BSDSRCDIR=${BASE_SRC_DIR} BSDOBJDIR=${BASE_OBJ_DIR} ${.MAKE}
 
+GENERATE_UNPACK_CAT_CMD = \
+	unpack_cat() { \
+		echo "Unpacking $$@:" >&2; \
+		if [ -t 2 ]; then \
+			ftp -mo - $$(for a in "$$@"; do echo "file://$$a"; done); \
+		else \
+			cat -- "$$@"; \
+		fi; \
+	}
+
 COMPONENTS =	kernel	sys
 COMPONENTS +=	base	src
 
@@ -48,8 +58,10 @@ KERNEL_CONF_DIR =		${KERNEL_SRC_DIR}/arch/${MACHINE_CPU}/conf
 
 do-unpack-kernel:
 	mkdir -p ${KERNEL_SRC_DIR}
+	${GENERATE_UNPACK_CAT_CMD}; \
 	cd ${KERNEL_SRC_DIR}/..; \
-	pax -rz -s '@./sys@./${KERNEL_SRC_DIR:C,.*/,,}@' <${FETCH_DIR}/sys.tar.gz
+	unpack_cat ${FETCH_DIR}/sys.tar.gz | \
+	    pax -rz -s '@./sys@./${KERNEL_SRC_DIR:C,.*/,,}@'
 	mkdir -p ${KERNEL_SRC_DIR}/cwfs
 
 do-build-kernel: ${KERNEL_CONFIG_INDICATOR}
@@ -86,9 +98,10 @@ BASE_INSTALL_EXTRA = \
 
 do-unpack-base:
 	mkdir -p ${BASE_SRC_DIR}
+	${GENERATE_UNPACK_CAT_CMD}; \
 	cd ${BASE_SRC_DIR}; \
-	pax -rz <${FETCH_DIR}/src.tar.gz; \
-	mkdir -p sbin/mount_cwfs
+	unpack_cat ${FETCH_DIR}/src.tar.gz | pax -rz
+	mkdir -p ${BASE_SRC_DIR}/sbin/mount_cwfs
 
 # ignores e.g. sbin/mount_cwfs/ in unpatched mode
 do-build-base:
@@ -125,7 +138,7 @@ fetch: fetch-${_c}
 fetch-${_c}: ${${_c:U}_FETCHED_SET}
 ${${_c:U}_FETCHED_SET}:
 	mkdir -p ${FETCH_DIR}
-	${FETCH_CMD} -o $@.tmp
+	${FETCH_CMD} -o $@.tmp ${FETCH_URI}${_s}.tar.gz
 	mv $@.tmp $@
 
 unpack: unpack-${_c}
@@ -154,7 +167,8 @@ unpatch-${_c}:
 	patch -R -E -s <${.CURDIR}/cw-${_c}.patch
 
 build: build-${_c}
-build-${_c}: ${UNPACK_${_c:U}_COOKIE} do-build-${_c}
+build-${_c}: ${UNPACK_${_c:U}_COOKIE}
+	@${.MAKE} do-build-${_c}
 
 ${_c}: patch-${_c} build-${_c}
 
