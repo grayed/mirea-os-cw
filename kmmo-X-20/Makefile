@@ -125,7 +125,7 @@ install-base:
 .for _d in ${BASE_DIRS}
 	cd ${BASE_SRC_DIR}/${_d}; ${MAKE_CMD} install
 .endfor
-.for _f _o _g_ _m _d in ${BASE_INSTALL_EXTRA}
+.for _f _o _g _m _d in ${BASE_INSTALL_EXTRA}
 	install -c -o ${_o} -g ${_g} -m ${_m} ${_f} ${DESTDIR}${_d}
 .endfor
 
