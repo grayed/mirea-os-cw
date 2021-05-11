@@ -81,6 +81,12 @@ distclean-kernel:
 	rm -f ${KERNEL_CONFIG_INDICATOR}
 	rm -Rf ${KERNEL_OBJ_DIR} ${KERNEL_SRC_DIR}
 
+install-sys-headers:
+	cd ${KERNEL_SRC_DIR}; \
+	install -o root -g bin -m 0444 \
+	    $(grep ^'Index: sys/.*\.h' ${.CURDIR}/cw-kernel.patch | cut -d ' ' -f 2) \
+	    /usr/include/sys/
+
 
 ####################
 # Base OS specifics
@@ -104,7 +110,7 @@ do-unpack-base:
 	mkdir -p ${BASE_SRC_DIR}/sbin/mount_cwfs
 
 # ignores e.g. sbin/mount_cwfs/ in unpatched mode
-do-build-base:
+do-build-base: install-sys-headers
 	mkdir -p ${BASE_OBJ_DIR}
 .for _d in ${BASE_DIRS}
 . if exists(${BASE_SRC_DIR}/${_d}/Makefile)
