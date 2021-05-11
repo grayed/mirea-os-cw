@@ -1,6 +1,8 @@
 ##########################
 # Tweakable values
 
+DOAS ?=			/usr/bin/doas
+
 BASE_SRC_DIR ?=		/usr/src
 BASE_OBJ_DIR ?=		/usr/obj
 KERNEL_SRC_DIR ?=	${BASE_SRC_DIR}/sys
@@ -83,7 +85,7 @@ distclean-kernel:
 
 install-sys-headers:
 	cd ${KERNEL_SRC_DIR}; \
-	install -o root -g bin -m 0444 \
+	${DOAS} install -o root -g bin -m 0444 \
 	    $$(grep ^'Index: sys/.*\.h' ${.CURDIR}/cw-kernel.patch | cut -d ' ' -f 2) \
 	    /usr/include/sys/
 
