@@ -71,6 +71,7 @@ do-build-kernel: ${KERNEL_CONFIG_INDICATOR}
 
 ${KERNEL_CONFIG_INDICATOR} kernel-config:
 	cd ${KERNEL_CONF_DIR}; \
+	mkdir -p ${KERNEL_OBJ_DIR}; \
 	config -b ${KERNEL_OBJ_DIR} -s ${KERNEL_SRC_DIR} ${KERNEL_CONFIG}
 
 install-kernel:
