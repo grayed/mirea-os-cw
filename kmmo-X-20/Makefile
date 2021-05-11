@@ -84,7 +84,7 @@ distclean-kernel:
 install-sys-headers:
 	cd ${KERNEL_SRC_DIR}; \
 	install -o root -g bin -m 0444 \
-	    $(grep ^'Index: sys/.*\.h' ${.CURDIR}/cw-kernel.patch | cut -d ' ' -f 2) \
+	    $$(grep ^'Index: sys/.*\.h' ${.CURDIR}/cw-kernel.patch | cut -d ' ' -f 2) \
 	    /usr/include/sys/
 
 
