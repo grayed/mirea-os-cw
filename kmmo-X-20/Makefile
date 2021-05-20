@@ -65,7 +65,7 @@ do-unpack-kernel:
 	${GENERATE_UNPACK_CAT_CMD}; \
 	cd ${KERNEL_SRC_DIR}/..; \
 	unpack_cat ${FETCH_DIR}/sys.tar.gz | \
-	    pax -rz -s '@./sys@./${KERNEL_SRC_DIR:C,.*/,,}@'
+	    pax -rz -s ',^\(./\)*sys,${KERNEL_SRC_DIR:C,.*/,,},'
 	mkdir -p ${KERNEL_SRC_DIR}/cwfs
 
 do-build-kernel: ${KERNEL_CONFIG_INDICATOR}
