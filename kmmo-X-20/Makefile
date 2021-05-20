@@ -34,8 +34,8 @@ COMPONENTS +=	base	src
 
 all: base kernel
 
-.PHONY: all base build clean distclean fetch kernel kernel-config install patch
-.PHONY: unpack unpatch
+.PHONY: all base build clean distclean fetch kernel install patch unpack unpatch
+.PHONY: kernel-config kernel-headers
 
 
 ###############################################
@@ -56,7 +56,9 @@ ALL_${_c:U}_COOKIES = \
 
 PATCH_KERNEL_INDICATOR =	${KERNEL_SRC_DIR}/dev/cw.c
 KERNEL_CONFIG_INDICATOR =	${KERNEL_OBJ_DIR}/Makefile ${KERNEL_OBJ_DIR}/options
-KERNEL_CONF_DIR =		${KERNEL_SRC_DIR}/arch/${MACHINE_CPU}/conf
+KERNEL_CONF_DIR =	${KERNEL_SRC_DIR}/arch/${MACHINE_CPU}/conf
+KERNEL_HEADERS !=	grep ^'Index: sys/.*\.h' ${.CURDIR}/cw-kernel.patch | \
+			cut -d ' ' -f 2
 
 do-unpack-kernel:
 	mkdir -p ${KERNEL_SRC_DIR}
@@ -84,11 +86,11 @@ distclean-kernel:
 	rm -f ${KERNEL_CONFIG_INDICATOR}
 	rm -Rf ${KERNEL_OBJ_DIR} ${KERNEL_SRC_DIR}
 
-install-sys-headers:
-	cd ${KERNEL_SRC_DIR}; \
-	${DOAS} install -o root -g bin -m 0444 \
-	    $$(grep ^'Index: sys/.*\.h' ${.CURDIR}/cw-kernel.patch | cut -d ' ' -f 2) \
-	    /usr/include/sys/
+.for _h in ${KERNEL_HEADERS}
+kernel-headers: /usr/include/${_h}
+/usr/include/${_h}: ${KERNEL_SRC_DIR}/${_h}
+	${DOAS} install -o root -g bin -m 0444 $@ $>
+.endfor
 
 
 ####################
@@ -113,7 +115,7 @@ do-unpack-base:
 	mkdir -p ${BASE_SRC_DIR}/sbin/mount_cwfs
 
 # ignores e.g. sbin/mount_cwfs/ in unpatched mode
-do-build-base: install-sys-headers
+do-build-base: kernel-headers
 	mkdir -p ${BASE_OBJ_DIR}
 .for _d in ${BASE_DIRS}
 . if exists(${BASE_SRC_DIR}/${_d}/Makefile)
