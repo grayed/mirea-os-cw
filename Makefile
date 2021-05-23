@@ -35,7 +35,7 @@ MAKE_CMD =	env ${MAKE_ENV_${OS}} ${.MAKE}
 
 GENERATE_UNPACK_CAT_CMD = \
 	unpack_cat() { \
-		echo "Unpacking $$1:" >&2; \
+		echo "Unpacking $${1##*/}:" >&2; \
 		case $$1 in \
 		*.gz|*.tgz)	unpacker=gzcat;; \
 		*.bz2|*.tbz)	unpacker=bzcat;; \
