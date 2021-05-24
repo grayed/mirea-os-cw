@@ -1,4 +1,4 @@
-DOAS ?=			/usr/bin/doas
+DOAS ?=			doas
 
 SRC_DIR_base ?=		/usr/src
 OBJ_DIR_base ?=		/usr/obj
