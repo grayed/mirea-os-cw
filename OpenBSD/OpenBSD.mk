@@ -42,7 +42,7 @@ ${KERNEL_CONFIG_INDICATOR} kernel-config:
 	config -b ${OBJ_DIR_kernel} -s ${SRC_DIR_kernel} ${KERNEL_CONFIG}
 
 install-kernel:
-	cd ${OBJ_DIR_kernel}; ${MAKE_CMD} install
+	cd ${OBJ_DIR_kernel}; ${DOAS} ${MAKE_CMD} install
 
 clean-kernel:
 	cd ${OBJ_DIR_kernel} && ${MAKE_CMD} clean || true
@@ -90,10 +90,10 @@ do-build-base: kernel-headers
 
 install-base:
 .for _d in ${BASE_DIRS}
-	cd ${SRC_DIR_base}/${_d}; ${MAKE_CMD} install
+	cd ${SRC_DIR_base}/${_d}; ${DOAS} ${MAKE_CMD} install
 .endfor
 .for _f _o _g _m _d in ${BASE_INSTALL_EXTRA}
-	cd ${SRC_DIR_base}; install -c -o ${_o} -g ${_g} -m ${_m} ${_f} ${DESTDIR}${_d}
+	cd ${SRC_DIR_base}; ${DOAS} install -c -o ${_o} -g ${_g} -m ${_m} ${_f} ${DESTDIR}${_d}
 .endfor
 
 clean-base:
