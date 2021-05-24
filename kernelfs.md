@@ -71,7 +71,7 @@ N.B.: Поддержка FreeBSD пока что не завершена.
 дистрибутивах Linux приведены ниже:
 
 * [ALT Linux](https://wiki.gentoo.org/wiki/Kernel/Configuration/ru)
-* [Arch Linux](https://wiki.archlinux.org/title/Kernel_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)/Arch_Build_System_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)
+* [Arch Linux](https://wiki.archlinux.org/title/Kernel_%28%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9%29/Arch_Build_System_%28%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9%29)
 * [CentOS](https://wiki.centos.org/HowTos/Custom_Kernel) (на английском)
 * [Debian](https://wiki.debian.org/BuildADebianKernelPackage) (на английском)
 * [Gentoo](https://wiki.gentoo.org/wiki/Kernel/Configuration/ru)
@@ -112,7 +112,7 @@ N.B.: Поддержка FreeBSD пока что не завершена.
 2. Ещё одно поле аналогичного типа (в Linux нужно будет использовать `atomic_t`) в этой же структуре пусть хранит количество запущенных задач. Оно понадобится для обратной связи — с его помощью запущенные задачи будут сообщать о своём завершении. Пусть оно будет называться `cwm_queued_cnt`. Оно должно увеличиваться при запуске на планирование новой задачи и уменьшаться, когда задача принудительно снимается с планирования, либо сама отказывается перепланировать себя. Чтобы избежать race condition, связанных с одновременной модификацией данного поля, следует использовать атомарные операции:
 
 * **OpenBSD**: [atomic_dec_int(9)](https://man.openbsd.org/atomic_dec_int.9)
-* **FreeBSD**: [atomic_substract_int(9)]https://www.freebsd.org/cgi/man.cgi?query=atomic_substract_int&sektion=9)
+* **FreeBSD**: [atomic_substract_int(9)](https://www.freebsd.org/cgi/man.cgi?query=atomic_substract_int&sektion=9)
 * **Linux**: [Linux labs — Kernel API — Atomic variables](https://linux-kernel-labs.github.io/refs/heads/master/labs/kernel_api.html#atomic-variables), см. `atomic_dec()`.
 
 3. Попытаться в том коде размонтирования отменить запущенные по таймеру задачи (`timeout_del(9)` в *BSD, `del_timer(9)` в Linux). При успехе (т.е., если задача была успешно снята с планирования) `cwm_queued_cnt` должно уменьшаться с помощью тех же атомарных операций.
