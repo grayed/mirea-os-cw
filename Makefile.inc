@@ -9,33 +9,32 @@ OS_RELEASE !=		uname -r
 OS_PLAT !=		uname -m
 OS_PLAT_CPU !=		uname -p
 
-ALL_OS =	OpenBSD
-# XXX Gross hack due to bug in make with :M and :N matching outside loop.
-# XXX Should be instead:
-# XXX .if empty((ALL_OS:M${OS})
-# XXX ERRORS += ...
-# XXX .endif
-_VALID_OSES =
-.for _os in ${ALL_OS}
-. if !empty(OS:M${_os})
-_VALID_OSES +=	${_os}
+# Validity checks
+OS_IS_SUPPORTED = no
+UNIMPLEMENTED_OS =
+.for _os _rel _cpu in ${SUPPORTED_OS}
+. if "${_os}" == "${OS}" && "${_rel}" == "${OS_RELEASE}" && "${_cpu}" == "${OS_PLAT_CPU}"
+OS_IS_SUPPORTED = yes
+. endif
+. if !exists(${.CURDIR}/../${_os}/${_rel}) || !exists(${.CURDIR}/../${_os}/${_os}.mk)
+UNIMPLEMENTED_OS += ${_os} ${_rel}
 . endif
 .endfor
-.if empty(_VALID_OSES) || !exists(${.CURDIR}/${OS}/${OS}.mk)
-ERRORS +=	"The ${OS} operating system is not supported"
+.if "${OS_IS_SUPPORTED}" != "yes"
+ERRORS +=	"The ${OS} ${OS_RELEASE}/${OS_PLAT} is not supported."
 .endif
-.if !exists(${.CURDIR}/${OS}/${OS_RELEASE})
-ERRORS +=	"${OS} version ${OS_RELEASE} is not supported"
+.if !empty(UNIMPLEMENTED_OS)
+ERRORS +=	"Internal error: \${SUPPORTED_OS} lists ${UNIMPLEMENTED_OS} which are not implemented!"
 .endif
 
 FETCH_URI ?=	${FETCH_URI_${OS}}
 FETCH_DIR ?=	${HOME}/${OS}/${OS_RELEASE}
-PATCH_DIR =	${.CURDIR}/${OS}/${OS_RELEASE}
+PATCH_DIR =	${.CURDIR}/../${OS}/${OS_RELEASE}
 MAKE_CMD =	env ${MAKE_ENV_${OS}} ${.MAKE}
 
 GENERATE_UNPACK_CAT_CMD = \
 	unpack_cat() { \
-		echo "Unpacking $${1##*/}:" >&2; \
+		echo "Unpacking $${1\#\#*/}:" >&2; \
 		case $$1 in \
 		*.gz|*.tgz)	unpacker=gzcat;; \
 		*.bz2|*.tbz)	unpacker=bzcat;; \
@@ -43,20 +42,22 @@ GENERATE_UNPACK_CAT_CMD = \
 		*)		unpacker=cat;; \
 		esac; \
 		if [ -t 2 -a -x /usr/bin/ftp -a OpenBSD = "${OS}" ]; then \
-			/usr/bin/ftp -mo - "file://$$1" | $unpacker; \
-		elif curl=$$(command -v curl || true); [ -t 2 -a -n "$curl"  ]; then \
-			"$curl" -o - "file://$$1" | $unpacker; \
+			/usr/bin/ftp -mo - "file://$$1" | $$unpacker; \
+		elif curl=$$(command -v curl || true); [ -t 2 -a -n "$$curl"  ]; then \
+			"$$curl" -o - "file://$$1" | $$unpacker; \
 		else \
-			$unpacker <"$$1"; \
+			$$unpacker <"$$1"; \
 		fi; \
 	}
 
-.PHONY: all base build clean distclean fetch kernel install patch unpack unpatch
+.PHONY: all build clean distclean fetch install patch skel unpack unpatch
 .PHONY: kernel-config kernel-headers
 .MAIN: all
 
-.include "${OS}/${OS}.mk"
+all: patch build
+skel:
 
+.include "${OS}/${OS}.mk"
 
 #################################
 # Component and OS-agnostic code
@@ -70,10 +71,9 @@ ALL_${_c}_COOKIES = \
 	${UNPACK_${_c}_COOKIE} \
 	${PATCH_${_c}_COOKIE}
 
-all: ${_c}
 
 .PHONY: build-${_c} clean-${_c} distclean-${_c} fetch-${_c} install-${_c}
-.PHONY: patch-${_c} unpack-${_c} unpatch-${_c}
+.PHONY: patch-${_c} skel-${_c} unpack-${_c} unpatch-${_c}
 .PHONY: do-build-${_c} do-unpack-${_c}
 
 fetch: fetch-${_c}
@@ -89,8 +89,42 @@ ${UNPACK_${_c}_COOKIE}: ${${_c}_FETCHED_SET}
 	@${.MAKE} do-unpack-${_c}
 	@touch $@
 
+# Skeleton directory should contain actual course work files.
+# SKEL_${_c} must be a relative to student's flow folder, i.e.,
+# to the directory of the Makefile that included this file.
+SKEL_${_c} ?=
+skel: skel-${_c}
+
+# Make sure the skeleton directory exists before copying files.
+# The ${.CURDIR}/ is mandatory, otherwise, if ${SKEL_${_c}}
+# expands to "skel", which is perfectly valid itself, then
+# circular dependency between 'skel' and 'skel-foo' targets
+# will be created.
+skel-${_c}: ${.CURDIR}/${SKEL_${_c}}
+
+. if !empty(SKEL_${_c})
+SKEL_FILES_${_c} != \
+	cd ${.CURDIR}/${SKEL_${_c}}; \
+	find . -type f \! -name '*.orig' \! -name '*.rej' | \
+	cut -c 3-
+
+.  for _f in ${SKEL_FILES_${_c}}
+skel-${_c}: ${SRC_DIR_${_c}}/${_f}
+${SRC_DIR_${_c}}/${_f}: ${UNPACK_${_c}_COOKIE} ${SKEL_${_c}}/${_f}
+.   if exists(${SRC_DIR_${_c}}/${_f})
+	@cmp -s ${SKEL_${_c}}/${_f} ${SRC_DIR_${_c}}/${_f} && \
+	 touch ${SRC_DIR_${_c}}/${_f} || { \
+	  echo "Warning: ${SKEL_${_c}}/${_f} was updated and likely needs to be merged" >&2; \
+	  echo "into ${SRC_DIR_${_c}}/${_f}" >&2; \
+	 }
+.   else
+	install "${.CURDIR}/${SKEL_${_c}}/${_f}" "$@"
+.   endif
+.  endfor
+. endif
+
 patch: patch-${_c}
-patch-${_c}: ${PATCH_${_c}_COOKIE}
+patch-${_c}: skel-${_c} ${PATCH_${_c}_COOKIE}
 ${PATCH_${_c}_COOKIE}: ${UNPACK_${_c}_COOKIE}
 	@test ! -e ${PATCH_INDICATOR_${_c}} || \
 	    { echo called $@ in patched directory ${SRC_DIR_${_c}} >&2; exit 1; }
@@ -129,8 +163,8 @@ distclean-${_c}:
 ##############################
 # Display any errors detected
 
-.if !empty(ERRORS)
 .BEGIN:
+.if !empty(ERRORS)
 . for _e in ${ERRORS}
 	@printf "Error: %s\n" ${_e} >&2
 	@false
