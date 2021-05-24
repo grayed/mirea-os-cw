@@ -54,28 +54,28 @@ N.B.: Поддержка FreeBSD пока что не завершена.
 
 ### Дополнительная информация
 
-* [https://man.openbsd.org/vnode.9](vnode\(9\)) — документация по VFS в OpenBSD, со ссылками на связанные компоненты.  В FreeBSD есть аналогичная [https://www.freebsd.org/cgi/man.cgi?query=vnode&sektion=9](страница руководства), однако она менее подробная и полезна больше как источник ссылок на другие страницы.
-* [https://www.openbsd.org/faq/faq5.html](OpenBSD FAQ — Building the System from Source) — указания по сборке OpenBSD из исходных текстов в целом.
-* [https://docs.freebsd.org/en/books/handbook/kernelconfig/](FreeBSD Handbook — Configuring the FreeBSD Kernel) — указания по сборке ядра FreeBSD.
-* [https://www.freebsd.org/cgi/man.cgi?query=build&sektion=7](build\(7\)) — указания по сборке базовой системы FreeBSD.
+* [OpenBSD vnode(9)](https://man.openbsd.org/vnode.9) — документация по VFS в OpenBSD, со ссылками на связанные компоненты.  В FreeBSD есть аналогичная [страница руководства](https://www.freebsd.org/cgi/man.cgi?query=vnode&sektion=9), однако она менее подробная и полезна больше как источник ссылок на другие страницы.
+* [OpenBSD FAQ — Building the System from Source](https://www.openbsd.org/faq/faq5.html) — указания по сборке OpenBSD из исходных текстов в целом.
+* [FreeBSD Handbook — Configuring the FreeBSD Kernel](https://docs.freebsd.org/en/books/handbook/kernelconfig/) — указания по сборке ядра FreeBSD.
+* [FreeBSD build(7)](https://www.freebsd.org/cgi/man.cgi?query=build&sektion=7) — указания по сборке базовой системы FreeBSD.
 
 ## Linux
 
-Подробное описание процесса создания файловой системы уровня ядра в Linux,
-на английском языке:
-https://linux-kernel-labs.github.io/refs/heads/master/labs/filesystems_part1.html
+Подробное описание процесса создания файловой системы уровня ядра в Linux, на английском языке:
+[часть 1](https://linux-kernel-labs.github.io/refs/heads/master/labs/filesystems_part1.html),
+[часть 2](https://linux-kernel-labs.github.io/refs/heads/master/labs/filesystems_part2.html).
 
 Потребуются исходные тексты ядра; желательно использовать поставляемый
 с вашим дистрибутивом Linux пакет исходных текстов, обычно это что-то вроде
 `linux-sources` или `kernel-source`. Инструкции по сборке ядра в различных
 дистрибутивах Linux приведены ниже:
 
-* [https://wiki.gentoo.org/wiki/Kernel/Configuration/ru](ALT)
-* [https://wiki.archlinux.org/title/Kernel_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)/Arch_Build_System_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)](Arch)
-* [https://wiki.centos.org/HowTos/Custom_Kernel](CentOS) (на английском)
-* [https://wiki.debian.org/BuildADebianKernelPackage](Debian) (на английском)
-* [https://wiki.gentoo.org/wiki/Kernel/Configuration/ru](Gentoo)
-* [https://wiki.ubuntu.com/Kernel/BuildYourOwnKernel](Ubuntu) (на английском)
+* [ALT Linux](https://wiki.gentoo.org/wiki/Kernel/Configuration/ru)
+* [Arch Linux](https://wiki.archlinux.org/title/Kernel_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)/Arch_Build_System_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9)
+* [CentOS](https://wiki.centos.org/HowTos/Custom_Kernel) (на английском)
+* [Debian](https://wiki.debian.org/BuildADebianKernelPackage) (на английском)
+* [Gentoo](https://wiki.gentoo.org/wiki/Kernel/Configuration/ru)
+* [Ubuntu](https://wiki.ubuntu.com/Kernel/BuildYourOwnKernel) (на английском)
 
 ## Общие указания
 
@@ -83,9 +83,9 @@ https://linux-kernel-labs.github.io/refs/heads/master/labs/filesystems_part1.htm
 
 Прежде всего следует выделить действия, которые потребуется выполнять спустя какое-то время (один раз или регулярно — не принципиально) и закодировать их в отдельную функцию (функции). Затем остаётся сказать ядру, что «через столько-то времени выполнить запустить такую-то функцию». Источники информации:
 
-* **OpenBSD**: [https://man.openbsd.org/timeout_set.9](timeout\(9\))
-* **FreeBSD**: [https://www.freebsd.org/cgi/man.cgi?query=timeout&sektion=9](timeout\(9\))
-* **Linux**: [https://www.oreilly.com/library/view/linux-device-drivers/0596005903/ch07.html](Linux Device Drivers — Chapter 7. Time, Delays, and Deferred Work)
+* **OpenBSD**: [timeout(9)](https://man.openbsd.org/timeout_set.9)
+* **FreeBSD**: [timeout(9)](https://www.freebsd.org/cgi/man.cgi?query=timeout&sektion=9)
+* **Linux**: [Linux Device Drivers — Chapter 7. Time, Delays, and Deferred Work](https://www.oreilly.com/library/view/linux-device-drivers/0596005903/ch07.html)
 
 При этом напрямую из функции, которая будет вызвана по таймеру, обращаться к файловой системе нельзя. Дело в том, что в *BSD, Linux и многих других ОС код ядра работает в двух условных контекстах: контекст обработки прерывания (interrupt context) и контекст процесса (process context). Код в контексте прерываний запускается собственно при обработке прерываний. Таймеры по определению срабатывают по прерыванию.
 
@@ -99,9 +99,9 @@ https://linux-kernel-labs.github.io/refs/heads/master/labs/filesystems_part1.htm
 
 Чтобы избежать ситуации, когда с вашей ФС попытаются одновременно обращаться и из VFS, и из вашей запланированной задачи, потребуется блокировка, хотя бы банальный мьютекс:
 
-* **OpenBSD**: [https://man.openbsd.org/mutex.9](mutex\(9\))
-* **FreeBSD**: [https://www.freebsd.org/cgi/man.cgi?query=mutex&sektion=9](mutex\(9\))
-* **Linux**: [https://linux-kernel-labs.github.io/refs/heads/master/labs/kernel_api.html#mutex](Linux labs — Kernel API — Mutex)
+* **OpenBSD**: [mutex(9)](https://man.openbsd.org/mutex.9)
+* **FreeBSD**: [mutex(9)](https://www.freebsd.org/cgi/man.cgi?query=mutex&sektion=9)
+* **Linux**: [Linux Labs — Kernel API — Mutex](https://linux-kernel-labs.github.io/refs/heads/master/labs/kernel_api.html#mutex)
 
 Мьютекс должен в общем случае использоваться в каждой функции вашей файловой системы, являющейся точкой входа: это функции, которые вызывает VFS, а также фукнции, вызываемые механимзом планирования задач.
 
@@ -111,17 +111,17 @@ https://linux-kernel-labs.github.io/refs/heads/master/labs/filesystems_part1.htm
 
 2. Ещё одно поле аналогичного типа (в Linux нужно будет использовать `atomic_t`) в этой же структуре пусть хранит количество запущенных задач. Оно понадобится для обратной связи — с его помощью запущенные задачи будут сообщать о своём завершении. Пусть оно будет называться `cwm_queued_cnt`. Оно должно увеличиваться при запуске на планирование новой задачи и уменьшаться, когда задача принудительно снимается с планирования, либо сама отказывается перепланировать себя. Чтобы избежать race condition, связанных с одновременной модификацией данного поля, следует использовать атомарные операции:
 
-* **OpenBSD**: [https://man.openbsd.org/atomic_dec_int.9](atomic_dec_int\(9\))
-* **FreeBSD**: [https://www.freebsd.org/cgi/man.cgi?query=atomic_substract_int&sektion=9](atomic_substract_int\(9\))
-* **Linux**: [https://linux-kernel-labs.github.io/refs/heads/master/labs/kernel_api.html#atomic-variables](Linux labs — Kernel API — Atomic variables), см. `atomic_dec()`.
+* **OpenBSD**: [atomic_dec_int(9)](https://man.openbsd.org/atomic_dec_int.9)
+* **FreeBSD**: [atomic_substract_int(9)]https://www.freebsd.org/cgi/man.cgi?query=atomic_substract_int&sektion=9)
+* **Linux**: [Linux labs — Kernel API — Atomic variables](https://linux-kernel-labs.github.io/refs/heads/master/labs/kernel_api.html#atomic-variables), см. `atomic_dec()`.
 
 3. Попытаться в том коде размонтирования отменить запущенные по таймеру задачи (`timeout_del(9)` в *BSD, `del_timer(9)` в Linux). При успехе (т.е., если задача была успешно снята с планирования) `cwm_queued_cnt` должно уменьшаться с помощью тех же атомарных операций.
 
 4. Так как возможна ситуация, что задача уже была запущена, то нужно дождаться её окончания. Самое простое — в цикле проверять значение `cwm_queued_cnt`, пока оно не станет равно 0; вот почему это поле должно быть `volatile` — иначе компилятор может решить, что все чтения дадут одинаковый результат и закеширует значение переменной в регистре ЦП, вместо того, чтобы загружать его каждый раз заново. Чтобы не тратить слишком много процессорного времени, между проверками можно предлагать ядру сменить поток выполнения:
 
-* **OpenBSD**: [https://man.openbsd.org/tsleep.9](tsleep\(9\))
-* **FreeBSD**: [https://www.freebsd.org/cgi/man.cgi?query=tsleep&sektion=9](tsleep\(9\))
-* **Linux**: [https://www.linuxjournal.com/article/8144](Kernel Korner - Sleeping in the Kernel)
+* **OpenBSD**: [tsleep(9)](https://man.openbsd.org/tsleep.9)
+* **FreeBSD**: [tsleep(9)](https://www.freebsd.org/cgi/man.cgi?query=tsleep&sektion=9)
+* **Linux**: [Kernel Korner — Sleeping in the Kernel](https://www.linuxjournal.com/article/8144)
 
 5. Теперь, когда все фоновые задачи закончили свою деятельность, можно даже не брать ту самую блокировку (если только вы не приспособили её ещё для чего-то, кроме синхронизации VFS с фоновыми задачами), а спокойно завершить свою работу.
 
@@ -152,4 +152,4 @@ finish:
 	mutex_unlock(&cwm->cwm_lock);
 ```
 
-cwm_timer — это собственно таймер, его тоже надо будет сохранить в `struct cwfs_mnt`.  Как и соответствующий workqueue, в которую будут отправляться запланированные задачи.
+`cwm_timer` — это собственно таймер, его тоже надо будет сохранить в `struct cwfs_mnt`.  Как и соответствующий workqueue, в которую будут отправляться запланированные задачи.
