@@ -29,7 +29,7 @@ ERRORS +=	"Internal error: \${SUPPORTED_OS} lists ${UNIMPLEMENTED_OS} which are 
 
 FETCH_DIR ?=	${HOME}/${OS}/${OS_RELEASE}
 PATCH_DIR =	${.CURDIR}/../${OS}/${OS_RELEASE}
-MAKE_CMD =	env ${MAKE_ENV_${OS}} ${.MAKE}
+MAKE_CMD =	env ${MAKE_ENV} ${.MAKE}
 
 GENERATE_UNPACK_CAT_CMD = \
 	unpack_cat() { \
