@@ -125,7 +125,7 @@ ${SRC_DIR_${_c}}/${_f}: ${UNPACK_${_c}_COOKIE} ${SKEL_${_c}}/${_f}
 patch: patch-${_c}
 patch-${_c}: skel-${_c} ${PATCH_${_c}_COOKIE}
 ${PATCH_${_c}_COOKIE}: ${UNPACK_${_c}_COOKIE}
-	@! ${PATCH_INDICATOR_${_c}} ||
+	@! ${PATCH_INDICATOR_${_c}} || \
 	    { echo called $@ in patched directory ${SRC_DIR_${_c}} >&2; exit 1; }
 	cd ${SRC_DIR_${_c}}; \
 	patch -C <${PATCH_DIR}/cw-${_c}.patch; \
@@ -134,7 +134,7 @@ ${PATCH_${_c}_COOKIE}: ${UNPACK_${_c}_COOKIE}
 
 unpatch: unpatch-${_c}
 unpatch-${_c}:
-	@${PATCH_INDICATOR_${_c}} ||
+	@${PATCH_INDICATOR_${_c}} || \
 	    { echo called $@ in unpatched directory ${SRC_DIR_${_c}} >&2; exit 1; }
 	@rm -f ${PATCH_${_c}_COOKIE}
 	cd ${SRC_DIR_${_c}}; \
