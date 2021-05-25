@@ -9,7 +9,7 @@ KERNEL_CONFIG ?=	GENERIC
 MAKE_ENV =	BSDSRCDIR=${SRC_DIR_base}
 MAKE_ENV +=	BSDOBJDIR=${OBJ_DIR_base}
 
-FETCH_CMD ?=	/usr/bin/ftp -C -o -
+FETCH_CMD ?=	/usr/bin/ftp -C
 FETCH_URI ?=	https://cdn.openbsd.org/pub/${OS}/${OS_RELEASE}/
 
 COMPONENTS =	kernel	sys.tar.gz

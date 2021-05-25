@@ -79,7 +79,7 @@ fetch: fetch-${_c}
 fetch-${_c}: ${${_c}_FETCHED_SET}
 ${${_c}_FETCHED_SET}:
 	mkdir -p ${FETCH_DIR}
-	${FETCH_CMD} ${FETCH_URI}${_s} >$@.tmp
+	${FETCH_CMD} -o $@.tmp ${FETCH_URI}${_s}
 	mv $@.tmp $@
 
 unpack: unpack-${_c}
