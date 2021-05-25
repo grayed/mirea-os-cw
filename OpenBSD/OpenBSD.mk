@@ -19,7 +19,7 @@ COMPONENTS +=	base	src.tar.gz
 ###################
 # Kernel specifics
 
-PATCH_KERNEL_INDICATOR =	${SRC_DIR_kernel}/dev/cw.c
+PATCH_INDICATOR_kernel =	fgrep -w cwfs ${SRC_DIR_kernel}/conf/files
 KERNEL_CONFIG_INDICATOR =	${OBJ_DIR_kernel}/Makefile ${OBJ_DIR_kernel}/options
 KERNEL_CONF_DIR =	${SRC_DIR_kernel}/arch/${OS_PLAT_CPU}/conf
 KERNEL_HEADERS !=	grep ^'Index: sys/.*\.h' ${PATCH_DIR}/cw-kernel.patch | \
@@ -61,7 +61,7 @@ kernel-headers: /usr/include/${_h}
 ####################
 # Base OS specifics
 
-PATCH_BASE_INDICATOR =		${SRC_DIR_base}/sbin/mount_cwfs/mount_cwfs.c
+PATCH_INDICATOR_base =		fgrep -w mount_cwfs ${SRC_DIR_base}/sbin/Makefile
 
 BASE_DIRS = \
 	sbin/mount \

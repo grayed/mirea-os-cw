@@ -79,7 +79,7 @@ fetch: fetch-${_c}
 fetch-${_c}: ${${_c}_FETCHED_SET}
 ${${_c}_FETCHED_SET}:
 	mkdir -p ${FETCH_DIR}
-	${FETCH_CMD} -o - ${FETCH_URI}${_s} >$@.tmp
+	${FETCH_CMD} ${FETCH_URI}${_s} >$@.tmp
 	mv $@.tmp $@
 
 unpack: unpack-${_c}
@@ -125,7 +125,7 @@ ${SRC_DIR_${_c}}/${_f}: ${UNPACK_${_c}_COOKIE} ${SKEL_${_c}}/${_f}
 patch: patch-${_c}
 patch-${_c}: skel-${_c} ${PATCH_${_c}_COOKIE}
 ${PATCH_${_c}_COOKIE}: ${UNPACK_${_c}_COOKIE}
-	@test ! -e ${PATCH_INDICATOR_${_c}} || \
+	@! ${PATCH_INDICATOR_${_c}} ||
 	    { echo called $@ in patched directory ${SRC_DIR_${_c}} >&2; exit 1; }
 	cd ${SRC_DIR_${_c}}; \
 	patch -C <${PATCH_DIR}/cw-${_c}.patch; \
@@ -134,7 +134,7 @@ ${PATCH_${_c}_COOKIE}: ${UNPACK_${_c}_COOKIE}
 
 unpatch: unpatch-${_c}
 unpatch-${_c}:
-	@test -e ${PATCH_INDICATOR_${_c}} || \
+	@${PATCH_INDICATOR_${_c}} ||
 	    { echo called $@ in unpatched directory ${SRC_DIR_${_c}} >&2; exit 1; }
 	@rm -f ${PATCH_${_c}_COOKIE}
 	cd ${SRC_DIR_${_c}}; \
