@@ -54,7 +54,7 @@ distclean-kernel:
 .for _h in ${KERNEL_HEADERS}
 kernel-headers: /usr/include/${_h}
 /usr/include/${_h}: ${SRC_DIR_kernel}/${_h}
-	${DOAS} install -o root -g bin -m 0444 $@ $>
+	${DOAS} install -o root -g bin -m 0444 $> $@
 .endfor
 
 
