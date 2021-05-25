@@ -27,7 +27,6 @@ ERRORS +=	"The ${OS} ${OS_RELEASE}/${OS_PLAT} is not supported."
 ERRORS +=	"Internal error: \${SUPPORTED_OS} lists ${UNIMPLEMENTED_OS} which are not implemented!"
 .endif
 
-FETCH_URI ?=	${FETCH_URI_${OS}}
 FETCH_DIR ?=	${HOME}/${OS}/${OS_RELEASE}
 PATCH_DIR =	${.CURDIR}/../${OS}/${OS_RELEASE}
 MAKE_CMD =	env ${MAKE_ENV_${OS}} ${.MAKE}
@@ -80,7 +79,7 @@ fetch: fetch-${_c}
 fetch-${_c}: ${${_c}_FETCHED_SET}
 ${${_c}_FETCHED_SET}:
 	mkdir -p ${FETCH_DIR}
-	${FETCH_CMD} ${FETCH_URI}${_s} >$@.tmp
+	${FETCH_CMD} -o - ${FETCH_URI}${_s} >$@.tmp
 	mv $@.tmp $@
 
 unpack: unpack-${_c}
