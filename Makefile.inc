@@ -2,6 +2,8 @@
 # For documentation how to use this file, see README.md.
 #
 
+-include local.mk
+
 ERRORS =
 
 OS !=			uname -s

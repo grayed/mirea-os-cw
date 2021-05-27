@@ -53,3 +53,6 @@ dkms.conf
 
 # Temporary files
 *.tmp
+
+# Local settings
+local.mk
