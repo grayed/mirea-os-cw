@@ -2,7 +2,7 @@ DOAS ?=			doas
 
 SRC_DIR_base ?=		/usr/src
 OBJ_DIR_base ?=		/usr/obj
-SRC_DIR_kernel ?=	/usr/obj/sys
+SRC_DIR_kernel ?=	/usr/src/sys
 OBJ_DIR_kernel ?=	/usr/obj/k/${KERNEL_CONFIG}
 KERNEL_CONFIG ?=	GENERIC
 
