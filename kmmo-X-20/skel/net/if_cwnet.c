@@ -143,7 +143,12 @@ pgen_gen_pack(void *arg)
 
 	// printf("gen\n");
 
+// OpenBSD 6.10 and onwards have MCLGETL instead of MCLGETI
+#ifdef MCLGETI
 	m = MCLGETI(NULL, M_WAITOK, ifp, sizeof(sample));
+#else
+	m = MCLGETL(NULL, M_WAITOK, sizeof(sample));
+#endif
 	m->m_len = m->m_pkthdr.len = sizeof(sample);
 	eh = mtod(m, struct ether_header *);
 	memcpy(eh, sample, sizeof(sample));
