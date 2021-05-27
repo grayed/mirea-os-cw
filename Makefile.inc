@@ -138,11 +138,11 @@ do-skel-${_c}:
 			echo "При необходимости, попросите преподавателя о помощи." >&2; \
 		fi; \
 	else \
-		echo install -D ${SKEL_${_c}}/${_f} $@; \
-		     install -D ${SKEL_${_c}}/${_f} $@; \
+		echo install -D ${SKEL_${_c}}/${_f} ${SRC_DIR_${_c}}/${_f}; \
+		     install -D ${SKEL_${_c}}/${_f} ${SRC_DIR_${_c}}/${_f}; \
 	fi
 .  else
-	cd ${.CURDIR}; install -D ${SKEL_${_c}}/${_f} $@
+	cd ${.CURDIR}; install -D ${SKEL_${_c}}/${_f} ${SRC_DIR_${_c}}/${_f}
 .  endif
 . endfor
 
