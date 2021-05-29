@@ -1,0 +1,97 @@
+.\"	$OpenBSD$
+.\"
+.\" Copyright (c) YYYY YOUR NAME HERE <user@your.dom.ain>
+.\"
+.\" Permission to use, copy, modify, and distribute this software for any
+.\" purpose with or without fee is hereby granted, provided that the above
+.\" copyright notice and this permission notice appear in all copies.
+.\"
+.\" THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+.\" WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+.\" MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+.\" ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+.\" WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+.\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+.\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+.\"
+.Dd $Mdocdate: June 1 2021 $
+.Dt MOUNT_CWFS 8
+.Os
+.Sh NAME
+.Nm mount_cwfs
+.Nd mount an efficient memory file system
+.Sh SYNOPSIS
+.Nm
+.Op Fl g Ar group
+.Op Fl m Ar mode
+.Op Fl o Ar options
+.Op Fl u Ar user
+.Ar cwfs
+.Ar mount_point
+.Sh DESCRIPTION
+The
+.Nm
+command attaches an instance of the efficient memory file system to the
+global file system namespace.
+The
+.Ar cwfs
+parameter only exists for compatibility with the other mount commands and
+is ignored.
+The directory specified by
+.Ar mount_point
+is converted to an absolute path before use and its attributes (owner,
+group and mode) are inherited unless explicitly overridden by the options
+described below.
+.Pp
+The following options are supported:
+.Bl -tag -width XoXoptions
+.It Fl g Ar group
+Specifies the group name or GID of the root inode of the file system.
+Defaults to the mount point's GID.
+.It Fl m Ar mode
+Specifies the mode (in octal notation) of the root inode of the file system.
+Defaults to the mount point's mode.
+.It Fl o Ar options
+Options are specified with a
+.Fl o
+flag followed by a comma-separated string of options.
+See the
+.Xr mount 8
+man page for possible options and their meanings.
+.It Fl u Ar user
+Specifies the user name or UID of the root inode of the file system.
+Defaults to the mount point's UID.
+.El
+.Sh EXAMPLES
+The following command mounts a cwfs instance over the
+.Pa /mnt
+directory, inheriting its owner, group and mode settings:
+.Pp
+.Dl # mount -t cwfs cwfs /mnt
+.Pp
+The following command mounts a cwfs instance over the
+.Pa /mnt
+directory, owned by the
+.Sq joe
+user and belonging to the
+.Sq users
+group, with a restricted 0700 mode:
+.Pp
+.Dl # mount -t cwfs -o -ujoe -o -gusers -o -m0700 cwfs /mnt
+.Pp
+A corresponding
+.Xr fstab 5
+entry, using "swap" as a place holder:
+.Pp
+.Dl swap /mnt cwfs rw,-ujoe,-gusers,-m0700 0 0
+.Sh SEE ALSO
+.Xr fstab 5 ,
+.Xr mount 8
+.Sh HISTORY
+The
+.Nm
+utility was developed as a course work in MIREA - Russian Technology
+University.
+.Sh AUTHORS
+.An First Student Aq Mt fstudent@yandex.ru
+.An Second Student Aq Mt sstudent@mail.ru
