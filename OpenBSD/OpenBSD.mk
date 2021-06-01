@@ -16,8 +16,6 @@ COMPONENTS =	kernel	sys.tar.gz
 COMPONENTS +=	base	src.tar.gz
 
 
-.PHONY: install-kernel-headers
-
 ###################
 # Kernel specifics
 
@@ -33,9 +31,15 @@ do-configure-kernel:
 	config -b ${OBJ_DIR_kernel} -s ${SRC_DIR_kernel} ${KERNEL_CONFIG}
 
 .for _h in ${KERNEL_HEADERS}
-install-kernel-headers: /usr/include/${_h}
 /usr/include/${_h}: ${SRC_DIR_kernel}/${_h}
 	${DOAS} install -o root -g bin -m 0444 $> $@
+.endfor
+
+.PHONY: install-kernel-headers
+install-kernel-headers:
+.for _h in ${KERNEL_HEADERS}
+	cmp -s ${SRC_DIR_kernel}/${_h} /usr/include/${_h} || \
+	${DOAS} install -o root -g bin -m 0444 ${SRC_DIR_kernel}/${_h} /usr/include/${_h}
 .endfor
 
 
