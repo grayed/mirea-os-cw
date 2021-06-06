@@ -59,7 +59,7 @@ INSTALL_EXTRA_base = \
 	etc/etc.${OS_PLAT}/MAKEDEV	root	wheel	0555	/dev \
 	lib/libc/sys/mount.2		root	bin	0444	/usr/share/man/man2
 .for _man in ${BASE_MAN_PAGES}
-INSTALL_EXTRA_base +=	${_man}		root	bin	0444	/usr/${_man}
+INSTALL_EXTRA_base +=	${_man}		root	bin	0444	/usr/${_man:C,/man.\.,/,}
 .endfor
 
 do-configure-base:
