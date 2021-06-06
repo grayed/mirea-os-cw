@@ -52,7 +52,7 @@ BUILD_SUBDIRS_base = \
 	sbin/mount \
 	sbin/mount_cwfs
 
-BASE_MAN_PAGES != grep '^Index: .*\.[0-9]$$' ${PATCH_DIR}/cw-base.patch | \
+BASE_MAN_PAGES != grep '^Index: share/man/.*\.[0-9]$$' ${PATCH_DIR}/cw-base.patch | \
 		  cut -d ' ' -f 2
 
 INSTALL_EXTRA_base = \
