@@ -1,0 +1,157 @@
+Patch designed for OpenBSD 6.8-STABLE
+
+Index: sbin/Makefile
+===================================================================
+RCS file: /cvs/src/sbin/Makefile,v
+retrieving revision 1.108
+diff -u -p -r1.108 Makefile
+--- sbin/Makefile	25 Apr 2019 22:11:35 -0000	1.108
++++ sbin/Makefile	30 Apr 2021 09:31:47 -0000
+@@ -4,7 +4,7 @@ SUBDIR=	atactl badsect bioctl clri dhcli
+ 	disklabel dmesg dump dumpfs fdisk fsck fsck_ext2fs fsck_ffs  \
+ 	fsck_msdos fsdb fsirand growfs ifconfig iked init ipsecctl  \
+ 	isakmpd kbd ldattach mknod mount \
+-	mount_cd9660 mount_ext2fs mount_ffs mount_msdos \
++	mount_cd9660 mount_cwfs mount_ext2fs mount_ffs mount_msdos \
+ 	mount_nfs mount_ntfs mount_tmpfs mount_udf \
+ 	mount_vnd mountd ncheck_ffs newfs newfs_ext2fs newfs_msdos \
+ 	nfsd nologin pdisk pfctl pflogd ping quotacheck \
+Index: share/man/man4/options.4
+===================================================================
+RCS file: /cvs/src/share/man/man4/options.4,v
+retrieving revision 1.267
+diff -u -p -r1.267 options.4
+--- share/man/man4/options.4	5 Nov 2019 07:53:58 -0000	1.267
++++ share/man/man4/options.4	30 Apr 2021 09:31:47 -0000
+@@ -171,6 +171,12 @@ standard file system used on many CD-ROM
+ It also supports Joliet extensions.
+ See
+ .Xr mount_cd9660 8 .
++.It Cd option CWFS
++Includes code for the course work file system.
++See
++.Xr mount_cwfs 8 .
++.It Cd option CWFS_DEBUG
++Includes code for debugging the course work file system.
+ .It Cd option EXT2FS
+ Includes code implementing the Second Extended File System
+ .Em ( EXT2FS ) ,
+Index: share/man/man5/fstab.5
+===================================================================
+RCS file: /cvs/src/share/man/man5/fstab.5,v
+retrieving revision 1.53
+diff -u -p -r1.53 fstab.5
+--- share/man/man5/fstab.5	10 Sep 2015 17:55:21 -0000	1.53
++++ share/man/man5/fstab.5	30 Apr 2021 09:31:47 -0000
+@@ -100,6 +100,8 @@ The system currently supports the follow
+ .Bl -tag -width indent -offset indent -compact
+ .It cd9660
+ An ISO 9660 CD-ROM filesystem.
++.It cwfs
++A course work filesystem.
+ .It ext2fs
+ A local Linux compatible ext2fs
+ filesystem.
+Index: share/man/man8/man8.amd64/MAKEDEV.8
+===================================================================
+RCS file: /cvs/src/share/man/man8/man8.amd64/MAKEDEV.8,v
+retrieving revision 1.88
+diff -u -p -r1.88 MAKEDEV.8
+--- share/man/man8/man8.amd64/MAKEDEV.8	23 Jan 2020 02:59:24 -0000	1.88
++++ share/man/man8/man8.amd64/MAKEDEV.8	30 Apr 2021 09:31:47 -0000
+@@ -209,6 +209,9 @@ Video frame grabbers, see
+ .It Ar bpf
+ Berkeley Packet Filter, see
+ .Xr bpf 4 .
++.It Ar cw
++Course work, see
++.Xr cw 4 .
+ .It Ar dt
+ Dynamic Tracer, see
+ .Xr dt 4 .
+Index: share/man/man8/man8.i386/MAKEDEV.8
+===================================================================
+RCS file: /cvs/src/share/man/man8/man8.i386/MAKEDEV.8,v
+retrieving revision 1.115
+diff -u -p -r1.115 MAKEDEV.8
+--- share/man/man8/man8.i386/MAKEDEV.8	23 Jan 2020 02:59:25 -0000	1.115
++++ share/man/man8/man8.i386/MAKEDEV.8	30 Apr 2021 09:31:47 -0000
+@@ -209,6 +209,9 @@ Video frame grabbers, see
+ .It Ar bpf
+ Berkeley Packet Filter, see
+ .Xr bpf 4 .
++.It Ar cw
++Course work, see
++.Xr cw 4 .
+ .It Ar dt
+ Dynamic Tracer, see
+ .Xr dt 4 .
+Index: lib/libc/sys/mount.2
+===================================================================
+RCS file: /cvs/src/lib/libc/sys/mount.2,v
+retrieving revision 1.49
+diff -u -p -r1.49 mount.2
+--- lib/libc/sys/mount.2	8 Jul 2019 18:48:30 -0000	1.49
++++ lib/libc/sys/mount.2	30 Apr 2021 09:31:47 -0000
+@@ -144,6 +144,22 @@ struct iso_args {
+ #define	ISOFSMNT_SESS	  0x00000010 /* use iso_args.sess */
+ .Ed
+ .Pp
++.Dv MOUNT_CWFS
++.Bd -literal -offset indent -compact
++#define CWFS_ARGS_VERSION       1
++struct cwfs_args {
++      int       cwa_version;	                /* must be CWFS_ARGS_VERSION */
++
++      char     *cwa_fspec;                     /* block special device to mount */
++      struct    export_args cwa_export_info;   /* network export information */
++
++      /* Root node attributes. */
++      uid_t     cwa_root_uid;
++      gid_t     cwa_root_gid;
++      mode_t    cwa_root_mode;
++};
++.Ed
++.Pp
+ .Dv MOUNT_FFS
+ .Bd -literal -offset indent -compact
+ struct ufs_args {
+Index: etc/MAKEDEV.common
+===================================================================
+RCS file: /cvs/src/etc/MAKEDEV.common,v
+retrieving revision 1.113
+diff -u -p -r1.113 MAKEDEV.common
+--- etc/MAKEDEV.common	12 Feb 2021 10:26:33 -0000	1.113
++++ etc/MAKEDEV.common	30 Apr 2021 09:31:47 -0000
+@@ -521,6 +521,8 @@ __devitem(rmidi, rmidi*, Raw MIDI device
+ _mcdev(rmidi, rmidi*, rmidi, {-major_rmidi_c-}, 660 _sndiop)dnl
+ __devitem(diskmap, diskmap, Disk mapper, diskmap)dnl
+ _mkdev(diskmap, diskmap, {-M diskmap c major_diskmap_c 0 640 operator-})dnl
++__devitem(cw, cw, Course work, cw)dnl
++_mkdev(cw, cw, {-M cw c major_cw_c 0 666 wheel-})dnl
+ __devitem(pppx, pppx*, PPP Multiplexer, pppx 4)dnl
+ _mcdev(pppx, pppx*, pppx, {-major_pppx_c-}, 600)dnl
+ __devitem(pppac, pppac*, PPP Access Concentrator, pppac 4)dnl
+Index: sbin/mount/mount.c
+===================================================================
+RCS file: /cvs/src/sbin/mount/mount.c,v
+retrieving revision 1.73
+diff -u -p -r1.73 mount.c
+--- sbin/mount/mount.c	19 Jul 2019 15:13:17 -0000	1.73
++++ sbin/mount/mount.c	30 Apr 2021 09:31:47 -0000
+@@ -598,6 +598,15 @@ prmount(struct statfs *sf)
+ 			(void)printf("%s%s", !f++ ? " (" : ", ", "gens");
+ 		if (iso_args->flags & ISOFSMNT_EXTATT)
+ 			(void)printf("%s%s", !f++ ? " (" : ", ", "extatt");
++	} else if (strcmp(sf->f_fstypename, MOUNT_CWFS) == 0) {
++		struct cwfs_args *cwfs_args = &sf->mount_info.cwfs_args;
++
++		if (verbose || cwfs_args->cwa_root_uid || cwfs_args->cwa_root_gid)
++			(void)printf("%s%s=%u, %s=%u", !f++ ? " (" : ", ",
++			    "uid", cwfs_args->cwa_root_uid, "gid", cwfs_args->cwa_root_gid);
++		if (verbose || cwfs_args->cwa_root_mode != 040755)
++			(void)printf("%s%s=%04o", !f++ ? " (" : ", ",
++			    "mode", cwfs_args->cwa_root_mode & 07777);
+ 	} else if (strcmp(sf->f_fstypename, MOUNT_TMPFS) == 0) {
+ 		struct tmpfs_args *tmpfs_args = &sf->mount_info.tmpfs_args;
+ 

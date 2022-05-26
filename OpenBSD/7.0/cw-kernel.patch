@@ -1,0 +1,256 @@
+Patch designed for OpenBSD 6.9-STABLE
+
+Index: arch/amd64/amd64/conf.c
+===================================================================
+RCS file: /cvs/src/sys/arch/amd64/amd64/conf.c,v
+retrieving revision 1.73
+diff -u -p -r1.73 conf.c
+--- arch/amd64/amd64/conf.c	23 Jan 2021 05:08:34 -0000	1.73
++++ arch/amd64/amd64/conf.c	20 May 2021 21:34:22 -0000
+@@ -275,7 +275,7 @@ struct cdevsw	cdevsw[] =
+ 	cdev_acpi_init(NACPI,acpi),	/* 83: ACPI */
+ 	cdev_notdef(),
+ 	cdev_nvram_init(NNVRAM,nvram),	/* 85: NVRAM interface */
+-	cdev_notdef(),			/* 86 */
++	cdev_disk_init(1,cw),		/* 86: course work */
+ 	cdev_drm_init(NDRM,drm),	/* 87: drm */
+ 	cdev_gpio_init(NGPIO,gpio),	/* 88: gpio */
+ 	cdev_vscsi_init(NVSCSI,vscsi),	/* 89: vscsi */
+Index: arch/i386/i386/conf.c
+===================================================================
+RCS file: /cvs/src/sys/arch/i386/i386/conf.c,v
+retrieving revision 1.171
+diff -u -p -r1.171 conf.c
+--- arch/i386/i386/conf.c	23 Jan 2021 05:08:35 -0000	1.171
++++ arch/i386/i386/conf.c	20 May 2021 21:34:22 -0000
+@@ -275,7 +275,7 @@ struct cdevsw	cdevsw[] =
+ 	cdev_gpio_init(NGPIO,gpio),	/* 83: GPIO interface */
+ 	cdev_nvram_init(NNVRAM,nvram),	/* 84: NVRAM interface */
+ 	cdev_notdef(),			/* 85: ACPI (deprecated) */
+-	cdev_notdef(),
++	cdev_disk_init(1,cw),		/* 86: course work */
+ 	cdev_notdef(),			/* 87 */
+ 	cdev_drm_init(NDRM,drm),	/* 88: drm */
+ 	cdev_amdmsr_init(NAMDMSR,amdmsr),	/* 89: amdmsr */
+Index: conf/GENERIC
+===================================================================
+RCS file: /cvs/src/sys/conf/GENERIC,v
+retrieving revision 1.275
+diff -u -p -r1.275 GENERIC
+--- conf/GENERIC	7 Apr 2021 00:16:00 -0000	1.275
++++ conf/GENERIC	20 May 2021 21:34:22 -0000
+@@ -43,6 +43,8 @@ option		MSDOSFS		# MS-DOS file system
+ option		FIFO		# FIFOs; RECOMMENDED
+ #option		TMPFS		# efficient memory file system
+ option		FUSE		# FUSE
++option		CWFS            # course work file system
++option		CWFS_DEBUG      # debugging of course work file system
+ 
+ option		SOCKET_SPLICE	# Socket Splicing for TCP and UDP
+ option		TCP_ECN		# Explicit Congestion Notification for TCP
+@@ -89,6 +94,7 @@ pseudo-device	bpfilter	# packet filter
+ pseudo-device	bridge		# network bridging support
+ pseudo-device	veb		# virtual Ethernet bridge
+ pseudo-device	carp		# CARP protocol support
++pseudo-device	cwnet		# MIREA course work network interface
+ pseudo-device	etherip		# EtherIP (RFC 3378)
+ pseudo-device	gif		# IPv[46] over IPv[46] tunnel (RFC1933)
+ pseudo-device	gre		# GRE encapsulation interface
+Index: conf/files
+===================================================================
+RCS file: /cvs/src/sys/conf/files,v
+retrieving revision 1.702
+diff -u -p -r1.702 files
+--- conf/files	16 Apr 2021 08:17:35 -0000	1.702
++++ conf/files	20 May 2021 21:34:22 -0000
+@@ -576,6 +576,8 @@ pseudo-device pppx: ifnet
+ pseudo-device vxlan: ifnet, ether, ifmedia
+ pseudo-device switch: ifnet, ether
+ pseudo-device wg: ifnet
++pseudo-device cw: tty
++pseudo-device cwnet: ifnet, ether
+ 
+ pseudo-device ksyms
+ file	dev/ksyms.c			ksyms needs-flag
+@@ -633,6 +635,8 @@ file	dev/dt/dt_prov_static.c		dt
+ # XXX machine-independent SCSI files should live somewhere here, maybe
+ 
+ # kernel sources
++file cwfs/cwfs_vfsops.c			cwfs
++file cwfs/cwfs_vnops.c			cwfs
+ file ddb/db_access.c			ddb
+ file ddb/db_break.c			ddb
+ file ddb/db_command.c			ddb
+@@ -654,6 +658,7 @@ file ddb/db_watch.c			ddb
+ file ddb/db_usrreq.c			ddb
+ file dev/audio.c			audio			needs-flag
+ file dev/cons.c
++file dev/cw.c
+ file dev/diskmap.c
+ file dev/firmload.c			firmload
+ file dev/ic/dp8390.c			dp8390nic
+@@ -827,6 +861,7 @@ file net/rtable.c
+ file net/route.c
+ file net/rtsock.c
+ file net/slcompress.c			ppp
++file net/if_cwnet.c
+ file net/if_enc.c			enc
+ file net/if_gre.c			gre			needs-count
+ file net/if_trunk.c			trunk
+Index: kern/Makefile
+===================================================================
+RCS file: /cvs/src/sys/kern/Makefile,v
+retrieving revision 1.49
+diff -u -p -r1.49 Makefile
+--- kern/Makefile	11 May 2019 07:18:16 -0000	1.49
++++ kern/Makefile	20 May 2021 21:34:23 -0000
+@@ -29,6 +29,7 @@ SYSDIR=/sys
+ 
+ # Directories in which to place tags links (other than machine-dependent)
+ DGEN=	conf \
++	cwfs \
+ 	ddb \
+ 	dev dev/eisa dev/ic dev/isa dev/pci dev/pcmcia dev/cardbus \
+ 	dev/sun dev/tc \
+Index: kern/vfs_init.c
+===================================================================
+RCS file: /cvs/src/sys/kern/vfs_init.c,v
+retrieving revision 1.43
+diff -u -p -r1.43 vfs_init.c
+--- kern/vfs_init.c	26 Dec 2019 13:30:54 -0000	1.43
++++ kern/vfs_init.c	20 May 2021 21:34:23 -0000
+@@ -100,6 +100,11 @@ static struct vfsconf vfsconflist[] = {
+ 	{ &tmpfs_vfsops, MOUNT_TMPFS, 19, 0, MNT_LOCAL,
+ 	    sizeof(struct tmpfs_args) },
+ #endif
++
++#ifdef CWFS
++	{ &cwfs_vfsops, MOUNT_CWFS, 20, 0, MNT_LOCAL,
++	    sizeof(struct cwfs_args) },
++#endif
+ };
+ 
+ 
+Index: sys/conf.h
+===================================================================
+RCS file: /cvs/src/sys/sys/conf.h,v
+retrieving revision 1.156
+diff -u -p -r1.156 conf.h
+--- sys/conf.h	23 Jan 2021 05:08:36 -0000	1.156
++++ sys/conf.h	20 May 2021 21:34:23 -0000
+@@ -600,6 +600,7 @@ cdev_decl(uk);
+ cdev_decl(dt);
+ 
+ cdev_decl(diskmap);
++cdev_decl(cw);
+ 
+ cdev_decl(bpf);
+ 
+Index: sys/malloc.h
+===================================================================
+RCS file: /cvs/src/sys/sys/malloc.h,v
+retrieving revision 1.121
+diff -u -p -r1.121 malloc.h
+--- sys/malloc.h	9 Mar 2021 15:08:23 -0000	1.121
++++ sys/malloc.h	20 May 2021 21:34:23 -0000
+@@ -121,7 +121,9 @@
+ #define	M_EXEC		63	/* argument lists & other mem used by exec */
+ #define	M_MISCFSMNT	64	/* miscfs mount structures */
+ #define	M_FUSEFS	65	/* fusefs mount structures */
+-/* 66-73 - free */
++#define	M_CWFSMNT	66	/* cwfs mount structures */
++#define	M_CWFSNODE	67	/* cwfs vnode private part */
++/* 68-73 - free */
+ #define	M_PFKEY		74	/* pfkey data */
+ #define	M_TDB		75	/* Transforms database */
+ #define	M_XDATA		76	/* IPsec data */
+@@ -250,8 +252,8 @@
+ 	"exec",		/* 63 M_EXEC */ \
+ 	"miscfs mount",	/* 64 M_MISCFSMNT */ \
+ 	"fusefs mount", /* 65 M_FUSEFS */ \
+-	NULL, \
+-	NULL, \
++	"cwfs mount",	/* 66 M_CWFSMNT */ \
++	"cwfs node",	/* 67 M_CWFSNODE */ \
+ 	NULL, \
+ 	NULL, \
+ 	NULL, \
+Index: sys/mount.h
+===================================================================
+RCS file: /cvs/src/sys/sys/mount.h,v
+retrieving revision 1.148
+diff -u -p -r1.148 mount.h
+--- sys/mount.h	6 Apr 2021 14:17:35 -0000	1.148
++++ sys/mount.h	20 May 2021 21:34:23 -0000
+@@ -240,6 +240,24 @@ struct tmpfs_args {
+ };
+ 
+ /*
++ * Arguments to mount cwfs file systems
++ */
++#define CWFS_ARGS_VERSION	1
++struct cwfs_args {
++	int	 cwa_version;
++
++	char	*cwa_fspec;		/* block special device to mount */
++	struct	export_args cwa_export_info;/* network export information */
++
++	/* Root node attributes. */
++	uid_t	 cwa_root_uid;
++	gid_t	 cwa_root_gid;
++	mode_t	 cwa_root_mode;
++
++	/* TODO */
++};
++
++/*
+  * Arguments to mount fusefs filesystems
+  */
+ struct fusefs_args {
+@@ -273,6 +291,7 @@ union mount_info {
+ 	struct msdosfs_args msdosfs_args;
+ 	struct ntfs_args ntfs_args;
+ 	struct tmpfs_args tmpfs_args;
++	struct cwfs_args cwfs_args;
+ 	char __align[160];	/* 64-bit alignment and room to grow */
+ };
+ 
+@@ -325,6 +344,7 @@ struct statfs {
+ #define	MOUNT_UDF	"udf"		/* UDF */
+ #define	MOUNT_TMPFS	"tmpfs"		/* tmpfs */
+ #define	MOUNT_FUSEFS	"fuse"		/* FUSE */
++#define	MOUNT_CWFS	"cwfs"		/* course work file system */
+ 
+ /*
+  * Structure per mounted file system.  Each mounted file system has an
+@@ -558,6 +578,7 @@ extern	const struct vfsops ntfs_vfsops;
+ extern	const struct vfsops udf_vfsops;
+ extern	const struct vfsops fusefs_vfsops;
+ extern	const struct vfsops tmpfs_vfsops;
++extern	const struct vfsops cwfs_vfsops;
+ 
+ #include <net/radix.h>
+ #include <sys/socket.h>		/* XXX for AF_MAX */
+Index: sys/vnode.h
+===================================================================
+RCS file: /cvs/src/sys/sys/vnode.h,v
+retrieving revision 1.156
+diff -u -p -r1.156 vnode.h
+--- sys/vnode.h	8 Apr 2020 08:07:52 -0000	1.156
++++ sys/vnode.h	20 May 2021 21:34:23 -0000
+@@ -67,12 +67,14 @@ enum vtagtype	{
+ 	VT_NON, VT_UFS, VT_NFS, VT_MFS, VT_MSDOSFS,
+ 	VT_PORTAL, VT_PROCFS, VT_AFS, VT_ISOFS, VT_ADOSFS,
+ 	VT_EXT2FS, VT_VFS, VT_NTFS, VT_UDF, VT_FUSEFS, VT_TMPFS,
++	VT_CWFS
+ };
+ 
+ #define	VTAG_NAMES \
+     "NON", "UFS", "NFS", "MFS", "MSDOSFS",			\
+     "unused", "unused", "unused", "ISOFS", "unused",		\
+-    "EXT2FS", "VFS", "NTFS", "UDF", "FUSEFS", "TMPFS"
++    "EXT2FS", "VFS", "NTFS", "UDF", "FUSEFS", "TMPFS"		\
++    "CWFS"
+ 
+ /*
+  * Each underlying filesystem allocates its own private area and hangs
